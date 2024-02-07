@@ -1,53 +1,107 @@
 package com.flipcart.es.serviceimpl;
 
-import java.util.EnumSet;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.flipcart.es.entity.Customer;
+import com.flipcart.es.entity.Seller;
 import com.flipcart.es.entity.User;
 import com.flipcart.es.enums.UserRole;
+import com.flipcart.es.exceptions.EmailAlreadyVarifiedException;
+import com.flipcart.es.exceptions.UserRoleNotFoundException;
+import com.flipcart.es.repository.CustomerRepository;
+import com.flipcart.es.repository.SellerRepository;
+import com.flipcart.es.repository.UserRepository;
 import com.flipcart.es.requestdto.UserRequest;
 import com.flipcart.es.responsedto.UserResponse;
 import com.flipcart.es.service.AuthService;
+import com.flipcart.es.utility.ResponseEntityProxy;
+import com.flipcart.es.utility.ResponseStructure;
+
+import lombok.AllArgsConstructor;
 
 @Service
+@AllArgsConstructor
 public class AuthServiceImpl implements AuthService
 {
+	private UserRepository userRepository;
+	private SellerRepository sellerRepository;
+	private CustomerRepository customerRepository;
+	private PasswordEncoder encoder;
 
-	private User mapToUserRequest(UserRequest userRequest)
+
+	@SuppressWarnings("unchecked")
+	private <T extends User> T mapToUserRequest(UserRequest userRequest)
 	{
-		return User.builder()
-				.email(userRequest.getEmail())
-				.password(userRequest.getPassword())
-				.userRole(UserRole.valueOf(userRequest.getUserRole()))
-				.build();
+		User user = null;
+
+		switch(UserRole.valueOf(userRequest.getUserRole().toUpperCase()))
+		{
+		case  SELLER -> {user = new Seller();}
+		case CUSTOMER ->{user = new Customer();}
+		default -> {throw new UserRoleNotFoundException("user with invalid user role");}
+		}
+		user.setUsername(userRequest.getEmail().split("@")[0].toString());
+		user.setEmail(userRequest.getEmail());
+		user.setPassword(encoder.encode(userRequest.getPassword()));
+		user.setUserRole(UserRole.valueOf(userRequest.getUserRole().toUpperCase()));
+
+		return (T) user;
 	}
 
 	private UserResponse mapToUserResponse(User user)
 	{
+		System.out.println(user+"  response");
 		return UserResponse.builder()
 				.userId(user.getUserId())
 				.username(user.getUsername())
 				.email(user.getEmail())
 				.userRole(user.getUserRole())
+				.isDeleted(user.isDeleted())
+				.isEmailVerified(user.isEmailVerified())
 				.build();
 	}
 
-
 	@Override
-	public void userRegister(UserRequest userRequest) 
+	public ResponseEntity<ResponseStructure<UserResponse>> userRegister(UserRequest userRequest) 
 	{
-		UserRole userRole = UserRole.valueOf(userRequest.getUserRole().toUpperCase());
-
-		if(EnumSet.allOf(UserRole.class).contains(userRole))
-		{
-
-		}
-		else
-		{
-
-		}
+		User user = userRepository.findByUsername(userRequest.getEmail().split("@")[0].toString())
+				.map(u->{
+					if(u.isEmailVerified())
+					{
+						throw new  EmailAlreadyVarifiedException("user already existed with the specified email id");
+					}
+					else
+					{
+						//otp
+					}
+					return u;
+				})
+				.orElse(saveUser(userRequest));
+		System.out.println(user);
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.ACCEPTED,"please varify through OTP sent on your mail id", mapToUserResponse(user));
 
 	}
+
+	private User saveUser(UserRequest userRequest)
+	{
+		User user=null;
+		switch (UserRole.valueOf(userRequest.getUserRole().toUpperCase())) 
+		{
+		case SELLER ->
+		{ 
+			user=sellerRepository.save(mapToUserRequest(userRequest));
+		}
+		case CUSTOMER ->
+		{
+			user=customerRepository.save(mapToUserRequest(userRequest));
+		}
+		default ->{throw new UserRoleNotFoundException("user with invalid user role ");}
+		}
+		return user;
+	}
+
 
 }
