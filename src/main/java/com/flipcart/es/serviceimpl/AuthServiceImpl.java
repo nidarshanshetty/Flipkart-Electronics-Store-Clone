@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService
 
 	}
 
-	private User saveUser(UserRequest userRequest)
+	public User saveUser(UserRequest userRequest)
 	{
 		User user=null;
 		switch (UserRole.valueOf(userRequest.getUserRole().toUpperCase())) 
