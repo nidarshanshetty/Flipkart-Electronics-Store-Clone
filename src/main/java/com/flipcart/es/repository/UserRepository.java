@@ -10,11 +10,9 @@ import com.flipcart.es.entity.User;
 public interface UserRepository extends JpaRepository<User, Integer>
 {
 
-	boolean existsByEmail(String email);
+	Optional<User> findByUsername(String username);
 
-	 Optional<User> findByUsername(String username);
-
-	List<User> findByIsEmailVarified(boolean b);
+	List<User> findByIsEmailVerified(boolean b);
 
 
 }

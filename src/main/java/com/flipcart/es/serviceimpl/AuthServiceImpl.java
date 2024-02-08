@@ -53,7 +53,6 @@ public class AuthServiceImpl implements AuthService
 
 	private UserResponse mapToUserResponse(User user)
 	{
-		System.out.println(user+"  response");
 		return UserResponse.builder()
 				.userId(user.getUserId())
 				.username(user.getUsername())
@@ -80,7 +79,6 @@ public class AuthServiceImpl implements AuthService
 					return u;
 				})
 				.orElse(saveUser(userRequest));
-		System.out.println(user);
 		return ResponseEntityProxy.setResponseStructure(HttpStatus.ACCEPTED,"please varify through OTP sent on your mail id", mapToUserResponse(user));
 
 	}

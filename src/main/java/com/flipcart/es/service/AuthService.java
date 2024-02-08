@@ -8,7 +8,5 @@ import com.flipcart.es.utility.ResponseStructure;
 
 public interface AuthService
 {
-
 	ResponseEntity<ResponseStructure<UserResponse>> userRegister(UserRequest userRequest);
-
 }
