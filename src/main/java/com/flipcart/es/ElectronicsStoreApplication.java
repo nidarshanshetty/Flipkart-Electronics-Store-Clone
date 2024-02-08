@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
 @SpringBootApplication
-@EnableAsync
+@EnableAsync(proxyTargetClass = true	)
 public class ElectronicsStoreApplication {
 
 	public static void main(String[] args) {
