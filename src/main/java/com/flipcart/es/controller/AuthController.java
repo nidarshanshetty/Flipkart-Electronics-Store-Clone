@@ -6,12 +6,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.flipcart.es.requestdto.AuthRequest;
 import com.flipcart.es.requestdto.OtpModel;
 import com.flipcart.es.requestdto.UserRequest;
+import com.flipcart.es.responsedto.AuthResponse;
 import com.flipcart.es.responsedto.UserResponse;
 import com.flipcart.es.service.AuthService;
 import com.flipcart.es.utility.ResponseStructure;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -31,6 +34,12 @@ public class AuthController
 	public ResponseEntity<String>verifyOTP(@RequestBody OtpModel otpModel)
 	{
 		return authService.verifyOTP(otpModel);
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<ResponseStructure<AuthResponse>>login(@RequestBody AuthRequest authRequest,HttpServletResponse response)
+	{
+		return authService.login(authRequest,response);
 	}
 
 }
