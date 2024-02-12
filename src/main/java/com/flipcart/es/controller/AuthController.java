@@ -1,6 +1,7 @@
 package com.flipcart.es.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -44,11 +45,11 @@ public class AuthController
 		return authService.login(authRequest,response);
 	}
 
+	@PreAuthorize("hasAuthority('SELLER')OR hasAuthority('CUSTOMER')")
 	@PutMapping("/logout")
 	public ResponseEntity<ResponseStructure<String>>logout(@CookieValue(name="rt" ,required = false)String refreshToken,
 			@CookieValue(name="at",required = false)String accessToken,HttpServletResponse response)
 	{
-
 		return authService.logout(refreshToken,accessToken,response);
 	}
 

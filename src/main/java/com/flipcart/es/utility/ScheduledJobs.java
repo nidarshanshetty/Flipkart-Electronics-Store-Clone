@@ -23,16 +23,16 @@ public class ScheduledJobs
 	private RefreshTokenRepository refreshTokenRepository;
 
 
-	@Scheduled(fixedDelay = 10000l)
-	public void CleanUpNonVerifiedUsers()
-	{
-		userRepository.findByIsEmailVerified(false)
-		.forEach(user->{
-			user.setDeleted(true);
-			userRepository.save(user);
-			userRepository.delete(user);
-		});
-	}
+		@Scheduled(fixedDelay = 10000l)
+		public void CleanUpNonVerifiedUsers()
+		{
+			userRepository.findByIsEmailVerified(false)
+			.forEach(user->{
+				user.setDeleted(true);
+				userRepository.save(user);
+				userRepository.delete(user);
+			});
+		}
 
 	@Scheduled(fixedDelay = 10000l)
 	public void CleanUpExpiredTokens()
