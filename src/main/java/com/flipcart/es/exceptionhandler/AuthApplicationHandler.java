@@ -11,6 +11,7 @@ import com.flipcart.es.exceptions.EmailAlreadyVarifiedException;
 import com.flipcart.es.exceptions.InvalidOTPException;
 import com.flipcart.es.exceptions.OTPExpiredException;
 import com.flipcart.es.exceptions.RegistrationSessionExpiredException;
+import com.flipcart.es.exceptions.UserNotLoggedInException;
 import com.flipcart.es.exceptions.UserRoleNotFoundException;
 
 @RestControllerAdvice
@@ -52,4 +53,10 @@ public class AuthApplicationHandler
 	{
 		return structure(HttpStatus.BAD_REQUEST,ex.getMessage(),"invalid otp");
 	}
+	@ExceptionHandler(UserNotLoggedInException.class)
+	public ResponseEntity<Object>handleUserNotLoggedInException(UserNotLoggedInException ex)
+	{
+		return structure(HttpStatus.NOT_FOUND, ex.getMessage(), "user not logged in");
+	}
+
 }

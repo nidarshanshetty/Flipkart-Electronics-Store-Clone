@@ -13,10 +13,11 @@ public class ScheduledJobs
 {
 	
 	private UserRepository userRepository;
+	
 
 
 	@Scheduled(fixedDelay = 10000l)
-	public void Cleanupnonverifiedusers()
+	public void CleanUpNonVerifiedUsers()
 	{
 		userRepository.findByIsEmailVerified(false)
 		.forEach(user->{
@@ -25,4 +26,8 @@ public class ScheduledJobs
 			userRepository.delete(user);
 		});
 	}
+	
+
+	
+	
 }

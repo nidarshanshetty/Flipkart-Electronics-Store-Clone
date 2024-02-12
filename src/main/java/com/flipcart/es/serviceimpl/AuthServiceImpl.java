@@ -28,6 +28,7 @@ import com.flipcart.es.exceptions.EmailAlreadyVarifiedException;
 import com.flipcart.es.exceptions.InvalidOTPException;
 import com.flipcart.es.exceptions.OTPExpiredException;
 import com.flipcart.es.exceptions.RegistrationSessionExpiredException;
+import com.flipcart.es.exceptions.UserNotLoggedInException;
 import com.flipcart.es.exceptions.UserRoleNotFoundException;
 import com.flipcart.es.repository.AccessTokenRepository;
 import com.flipcart.es.repository.CustomerRepository;
@@ -68,6 +69,7 @@ public class AuthServiceImpl implements AuthService
 	private JwtService jwtService;
 	private AccessTokenRepository accessTokenRepository;
 	private RefreshTokenRepository refreshTokenRepository;
+
 
 
 
@@ -304,16 +306,47 @@ public class AuthServiceImpl implements AuthService
 		accessTokenRepository.save(AccessToken.builder()
 				.token(accessToken)
 				.isBlocked(false)
+				.user(user)
 				.accessTokenExpiration(LocalDateTime.now().plusSeconds(accessExpiryInSeconds))
 				.build());
 
 		refreshTokenRepository.save(RefreshToken.builder()
 				.token(refreshToken)
 				.isBlocked(false)
+				.user(user)
 				.refreshTokenExpiration(LocalDateTime.now().plusSeconds(accessExpiryInSeconds))
 				.build());
 
 
+	}
+
+	@Override
+	public ResponseEntity<ResponseStructure<String>> logout(String accessToken,String refreshToken, HttpServletResponse response) 
+	{
+
+		if(accessToken==null&&refreshToken==null)throw new  UserNotLoggedInException("user not logged in");
+
+
+		accessTokenRepository.findByToken(accessToken)
+		.ifPresent(at -> {
+			at.setBlocked(true);
+			accessTokenRepository.save(at);
+		});
+		System.out.println(accessToken+"at");
+		System.out.println(refreshToken+"rt");
+
+		refreshTokenRepository.findByToken(refreshToken)
+		.ifPresent(rt -> {
+			rt.setBlocked(true);
+			refreshTokenRepository.save(rt);
+		});
+
+		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
+
+
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"logout successfully done", null);
 	}
 
 }
