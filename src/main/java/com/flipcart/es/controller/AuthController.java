@@ -52,5 +52,16 @@ public class AuthController
 	{
 		return authService.logout(refreshToken,accessToken,response);
 	}
+	@PutMapping("/revokeAllDevice")
+	public ResponseEntity<ResponseStructure<String>>revokeAllDevice(HttpServletResponse response)
+	{
+		return authService.revokeAllDevice(response);
+	}
+	@PutMapping("/revokeOtherDevice")
+	public ResponseEntity<ResponseStructure<String>>revokeOtherDevice(@CookieValue(name="rt",required = false)String refreshToken,
+			@CookieValue(name="at",required = false)String accessToken,HttpServletResponse response)
+	{
+		return authService.revokeOtherDevice(refreshToken,accessToken,response);
+	}
 
 }

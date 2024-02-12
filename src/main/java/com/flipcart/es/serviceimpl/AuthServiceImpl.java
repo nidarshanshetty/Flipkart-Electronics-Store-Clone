@@ -2,6 +2,7 @@ package com.flipcart.es.serviceimpl;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -332,8 +334,7 @@ public class AuthServiceImpl implements AuthService
 			at.setBlocked(true);
 			accessTokenRepository.save(at);
 		});
-		System.out.println(accessToken+"at");
-		System.out.println(refreshToken+"rt");
+
 
 		refreshTokenRepository.findByToken(refreshToken)
 		.ifPresent(rt -> {
@@ -348,5 +349,64 @@ public class AuthServiceImpl implements AuthService
 
 		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"logout successfully done", null);
 	}
+
+
+	private void blockAccessTokens(List<AccessToken> accessTokens)
+	{
+		for(AccessToken accessToken:accessTokens)
+		{
+			accessToken.setBlocked(true);
+			accessTokenRepository.save(accessToken);
+		}
+	}
+	private void blockRefreshTokens(List<RefreshToken> refreshTokens)
+	{
+		for(RefreshToken refreshToken:refreshTokens)
+		{
+			refreshToken.setBlocked(true);
+			refreshTokenRepository.save(refreshToken);
+		}
+	}
+
+	@Override
+	public ResponseEntity<ResponseStructure<String>> revokeAllDevice(HttpServletResponse response)
+	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		userRepository.findByUsername(username)
+		.ifPresent(user->{
+
+			List<AccessToken> accessTokens = accessTokenRepository.findAllByUserAndIsBlocked(user,false);
+			blockAccessTokens(accessTokens);
+			List<RefreshToken> refreshTokens = refreshTokenRepository.findAllByUserAndIsBlocked(user,false);
+			blockRefreshTokens(refreshTokens);
+
+		});
+
+		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
+		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"revoke all device successfully done", null);
+	}
+
+	@Override
+	public ResponseEntity<ResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
+			HttpServletResponse response)
+	{
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+		userRepository.findByUsername(username)
+		.ifPresent(user->{
+			List<AccessToken> accessTokens = accessTokenRepository.findAllByUserAndIsBlockedAndTokenNot(user,false,accessToken);
+			blockAccessTokens(accessTokens);
+			List<RefreshToken> refreshTokens = refreshTokenRepository.findAllByUserAndIsBlockedAndTokenNot(user,false,refreshToken);
+			blockRefreshTokens(refreshTokens);
+		});
+
+
+		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"revoke other device successfully done", null);
+	}
+
 
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.flipcart.es.exceptions.EmailAlreadyVarifiedException;
+import com.flipcart.es.exceptions.FailedToAuthenticateException;
 import com.flipcart.es.exceptions.InvalidOTPException;
 import com.flipcart.es.exceptions.OTPExpiredException;
 import com.flipcart.es.exceptions.RegistrationSessionExpiredException;
@@ -57,6 +58,12 @@ public class AuthApplicationHandler
 	public ResponseEntity<Object>handleUserNotLoggedInException(UserNotLoggedInException ex)
 	{
 		return structure(HttpStatus.NOT_FOUND, ex.getMessage(), "user not logged in");
+	}
+	@ExceptionHandler(FailedToAuthenticateException.class)
+	public ResponseEntity<Object>handleFailedToAuthenticateException(FailedToAuthenticateException ex)
+	{
+		return structure(HttpStatus.NOT_ACCEPTABLE,ex.getMessage(), "failed to authenticate ");
+
 	}
 
 }

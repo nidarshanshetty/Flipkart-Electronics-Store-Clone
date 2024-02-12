@@ -20,4 +20,9 @@ public interface AuthService
 	ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest, HttpServletResponse response);
 
 	ResponseEntity<ResponseStructure<String>> logout(String refreshToken,String accessToken, HttpServletResponse response);
+
+	ResponseEntity<ResponseStructure<String>> revokeAllDevice(HttpServletResponse response);
+
+	ResponseEntity<ResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
+			HttpServletResponse response);
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.flipcart.es.entity.AccessToken;
+import com.flipcart.es.exceptions.FailedToAuthenticateException;
 import com.flipcart.es.repository.AccessTokenRepository;
 
 import jakarta.servlet.FilterChain;
@@ -53,12 +54,12 @@ public class JwtFilter extends OncePerRequestFilter
 			{
 				Optional<AccessToken> accessToken = accessTokenRepository.findByTokenAndIsBlocked(at,false);
 
-				if(accessToken== null)throw new RuntimeException();
+				if(accessToken== null)throw new NullPointerException("access token not available");
 				else
 				{
 					log.info("Authenticating the token...");
 					username = jwtService.extractUsername(at);
-					if(username==null)throw new RuntimeException("failed to authenticate");
+					if(username==null)throw new FailedToAuthenticateException("failed to authenticate");
 					UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 					UsernamePasswordAuthenticationToken authenticationToken = 
 							new UsernamePasswordAuthenticationToken(username, null,userDetails.getAuthorities());
