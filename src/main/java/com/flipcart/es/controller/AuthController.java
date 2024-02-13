@@ -16,6 +16,7 @@ import com.flipcart.es.responsedto.AuthResponse;
 import com.flipcart.es.responsedto.UserResponse;
 import com.flipcart.es.service.AuthService;
 import com.flipcart.es.utility.ResponseStructure;
+import com.flipcart.es.utility.SimpleResponseStructure;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -40,28 +41,41 @@ public class AuthController
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<ResponseStructure<AuthResponse>>login(@RequestBody AuthRequest authRequest,HttpServletResponse response)
+	public ResponseEntity<ResponseStructure<AuthResponse>>login(@RequestBody AuthRequest authRequest,HttpServletResponse response,
+			@CookieValue(name="rt",required = false)String refreshToken,@CookieValue(name="at",required = false)String accessToken)
 	{
-		return authService.login(authRequest,response);
+		return authService.login(authRequest,response,refreshToken,accessToken);
 	}
 
 	@PreAuthorize("hasAuthority('SELLER')OR hasAuthority('CUSTOMER')")
 	@PutMapping("/logout")
-	public ResponseEntity<ResponseStructure<String>>logout(@CookieValue(name="rt" ,required = false)String refreshToken,
+	public ResponseEntity<SimpleResponseStructure<String>>logout(@CookieValue(name="rt" ,required = false)String refreshToken,
 			@CookieValue(name="at",required = false)String accessToken,HttpServletResponse response)
 	{
 		return authService.logout(refreshToken,accessToken,response);
 	}
+
 	@PutMapping("/revokeAllDevice")
-	public ResponseEntity<ResponseStructure<String>>revokeAllDevice(HttpServletResponse response)
+	public ResponseEntity<SimpleResponseStructure<String>>revokeAllDevice(HttpServletResponse response)
 	{
 		return authService.revokeAllDevice(response);
 	}
 	@PutMapping("/revokeOtherDevice")
-	public ResponseEntity<ResponseStructure<String>>revokeOtherDevice(@CookieValue(name="rt",required = false)String refreshToken,
+	public ResponseEntity<SimpleResponseStructure<String>>revokeOtherDevice(@CookieValue(name="rt",required = false)String refreshToken,
 			@CookieValue(name="at",required = false)String accessToken,HttpServletResponse response)
 	{
 		return authService.revokeOtherDevice(refreshToken,accessToken,response);
 	}
+
+	//	@PreAuthorize("hasAuthority('SELLER')OR hasAuthority('CUSTOMER')")
+	@PutMapping("/refresh")
+	public ResponseEntity<SimpleResponseStructure<String>>refreshLoginandTokenRotation(@CookieValue(name ="at",required = false)String accessToken,
+			@CookieValue(name="rt",required = false)String refreshToken,HttpServletResponse response)
+	{
+		System.out.println("controller");
+		return authService.refreshLoginandTokenRotation(accessToken,refreshToken,response);
+	}
+
+
 
 }

@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.flipcart.es.entity.AccessToken;
+import com.flipcart.es.entity.RefreshToken;
 import com.flipcart.es.repository.AccessTokenRepository;
 import com.flipcart.es.repository.RefreshTokenRepository;
 import com.flipcart.es.repository.UserRepository;
@@ -44,10 +45,12 @@ public class ScheduledJobs
 			accessTokenRepository.delete(accessToken);
 		}
 
-		refreshTokenRepository.findByRefreshTokenExpirationBefore(LocalDateTime.now())
-		.forEach(refreshToken->{
+		List<RefreshToken> refreshTokens = refreshTokenRepository.findByRefreshTokenExpirationBefore(LocalDateTime.now());
+		for(RefreshToken refreshToken:refreshTokens)
+		{
 			refreshTokenRepository.delete(refreshToken);
-		});
+		}
+		
 	}
 
 

@@ -30,6 +30,8 @@ import com.flipcart.es.exceptions.EmailAlreadyVarifiedException;
 import com.flipcart.es.exceptions.InvalidOTPException;
 import com.flipcart.es.exceptions.OTPExpiredException;
 import com.flipcart.es.exceptions.RegistrationSessionExpiredException;
+import com.flipcart.es.exceptions.UserIsLoggedOutAndRequiresALogin;
+import com.flipcart.es.exceptions.UserLoggedInException;
 import com.flipcart.es.exceptions.UserNotLoggedInException;
 import com.flipcart.es.exceptions.UserRoleNotFoundException;
 import com.flipcart.es.repository.AccessTokenRepository;
@@ -48,6 +50,7 @@ import com.flipcart.es.utility.CookieManager;
 import com.flipcart.es.utility.MessageStructure;
 import com.flipcart.es.utility.ResponseEntityProxy;
 import com.flipcart.es.utility.ResponseStructure;
+import com.flipcart.es.utility.SimpleResponseStructure;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -272,8 +275,10 @@ public class AuthServiceImpl implements AuthService
 
 
 	@Override
-	public ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response) 
+	public ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest,HttpServletResponse response,
+			String accessToken,String refreshToken) 
 	{
+		if(accessToken!=null&&refreshToken!=null)throw new UserLoggedInException("user already logged in");
 		String username =authRequest.getEmail().split("@")[0];
 		UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,authRequest.getPassword());
 		Authentication authentication = authenticationManager.authenticate(token);
@@ -284,15 +289,16 @@ public class AuthServiceImpl implements AuthService
 		else
 		{
 			//generating the cookies and  authResponse and returning to the client
-			return userRepository.findByUsername(username).map(user->
-			{
-				grantAccess(response, user);
+			return userRepository.findByUsername(username)
+					.map(user->
+					{
+						grantAccess(response, user);
 
-				return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"login successful",mapToAuthResponse(user));
-			})
+						return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"login successful",mapToAuthResponse(user));
+					})
 					.orElseThrow(()-> new UsernameNotFoundException("username not found"));
-
 		}
+
 	}
 	private void grantAccess(HttpServletResponse  httpServletResponse,User user)
 	{
@@ -323,7 +329,7 @@ public class AuthServiceImpl implements AuthService
 	}
 
 	@Override
-	public ResponseEntity<ResponseStructure<String>> logout(String accessToken,String refreshToken, HttpServletResponse response) 
+	public ResponseEntity<SimpleResponseStructure<String>> logout(String accessToken,String refreshToken, HttpServletResponse response) 
 	{
 
 		if(accessToken==null&&refreshToken==null)throw new  UserNotLoggedInException("user not logged in");
@@ -347,7 +353,7 @@ public class AuthServiceImpl implements AuthService
 
 
 
-		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"logout successfully done", null);
+		return ResponseEntityProxy.setSimpleResponseStructure(HttpStatus.OK,"logout successfully done");
 	}
 
 
@@ -369,7 +375,7 @@ public class AuthServiceImpl implements AuthService
 	}
 
 	@Override
-	public ResponseEntity<ResponseStructure<String>> revokeAllDevice(HttpServletResponse response)
+	public ResponseEntity<SimpleResponseStructure<String>> revokeAllDevice(HttpServletResponse response)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -386,11 +392,11 @@ public class AuthServiceImpl implements AuthService
 		response.addCookie(cookieManager.invalidate(new Cookie("at", "")));
 		response.addCookie(cookieManager.invalidate(new Cookie("rt", "")));
 
-		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"revoke all device successfully done", null);
+		return ResponseEntityProxy.setSimpleResponseStructure(HttpStatus.OK,"revoke all device successfully done");
 	}
 
 	@Override
-	public ResponseEntity<ResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
+	public ResponseEntity<SimpleResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
 			HttpServletResponse response)
 	{
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -405,7 +411,39 @@ public class AuthServiceImpl implements AuthService
 		});
 
 
-		return ResponseEntityProxy.setResponseStructure(HttpStatus.OK,"revoke other device successfully done", null);
+		return ResponseEntityProxy.setSimpleResponseStructure(HttpStatus.OK, "revoke other device successfully done");
+	}
+
+	@Override
+	public ResponseEntity<SimpleResponseStructure<String>> refreshLoginandTokenRotation(String refreshToken,
+			String accessToken,HttpServletResponse response)
+	{
+		System.out.println("1");
+		String name = SecurityContextHolder.getContext().getAuthentication().getName();
+		User user = userRepository.findByUsername(name).get();
+		System.out.println("refresjskndx");
+
+		if(refreshToken==null)
+		{
+			throw new UserIsLoggedOutAndRequiresALogin("user is logged out and requires a login");
+		}
+		else
+		{	refreshTokenRepository.findByToken(refreshToken)
+			.ifPresent(rt->
+			{
+				rt.setBlocked(true);
+			});
+		if(accessToken!=null)
+		{
+			accessTokenRepository.findByToken(accessToken)
+			.ifPresent(at->{
+				at.setBlocked(true);
+			});
+		}
+		grantAccess(response, user);
+
+		return ResponseEntityProxy.setSimpleResponseStructure(HttpStatus.OK,"refresh token and token rotation successfully done");
+		}
 	}
 
 
