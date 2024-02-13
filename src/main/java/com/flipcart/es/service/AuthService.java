@@ -8,6 +8,7 @@ import com.flipcart.es.requestdto.UserRequest;
 import com.flipcart.es.responsedto.AuthResponse;
 import com.flipcart.es.responsedto.UserResponse;
 import com.flipcart.es.utility.ResponseStructure;
+import com.flipcart.es.utility.SimpleResponseStructure;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -17,12 +18,15 @@ public interface AuthService
 
 	ResponseEntity<String> verifyOTP(OtpModel otpModel);
 
-	ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest, HttpServletResponse response);
+	ResponseEntity<ResponseStructure<AuthResponse>> login(AuthRequest authRequest, HttpServletResponse response,String accessToken,String refreshToken);
 
-	ResponseEntity<ResponseStructure<String>> logout(String refreshToken,String accessToken, HttpServletResponse response);
+	ResponseEntity<SimpleResponseStructure<String>> logout(String refreshToken,String accessToken, HttpServletResponse response);
 
-	ResponseEntity<ResponseStructure<String>> revokeAllDevice(HttpServletResponse response);
+	ResponseEntity<SimpleResponseStructure<String>> revokeAllDevice(HttpServletResponse response);
 
-	ResponseEntity<ResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
+	ResponseEntity<SimpleResponseStructure<String>> revokeOtherDevice(String refreshToken, String accessToken,
+			HttpServletResponse response);
+
+	ResponseEntity<SimpleResponseStructure<String>> refreshLoginandTokenRotation( String accessToken,String refreshToken,
 			HttpServletResponse response);
 }

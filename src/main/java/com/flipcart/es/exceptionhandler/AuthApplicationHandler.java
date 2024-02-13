@@ -12,6 +12,8 @@ import com.flipcart.es.exceptions.FailedToAuthenticateException;
 import com.flipcart.es.exceptions.InvalidOTPException;
 import com.flipcart.es.exceptions.OTPExpiredException;
 import com.flipcart.es.exceptions.RegistrationSessionExpiredException;
+import com.flipcart.es.exceptions.UserIsLoggedOutAndRequiresALogin;
+import com.flipcart.es.exceptions.UserLoggedInException;
 import com.flipcart.es.exceptions.UserNotLoggedInException;
 import com.flipcart.es.exceptions.UserRoleNotFoundException;
 
@@ -63,7 +65,16 @@ public class AuthApplicationHandler
 	public ResponseEntity<Object>handleFailedToAuthenticateException(FailedToAuthenticateException ex)
 	{
 		return structure(HttpStatus.NOT_ACCEPTABLE,ex.getMessage(), "failed to authenticate ");
-
+	}
+	@ExceptionHandler(UserIsLoggedOutAndRequiresALogin.class)
+	public ResponseEntity<Object>handleUserIsLoggedOutAndRequiresALogin(UserIsLoggedOutAndRequiresALogin ex)
+	{
+		return structure(HttpStatus.NOT_ACCEPTABLE,ex.getMessage(),"user is logged out requires a login");
+	}
+	@ExceptionHandler(UserLoggedInException.class)
+	public ResponseEntity<Object>handleUserLoggedInException(UserLoggedInException ex)
+	{
+		return structure(HttpStatus.BAD_REQUEST,ex.getMessage(),"user already logged in");
 	}
 
 }

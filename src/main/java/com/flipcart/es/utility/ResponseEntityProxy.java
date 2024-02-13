@@ -15,4 +15,13 @@ public class ResponseEntityProxy
 		return new  ResponseEntity<ResponseStructure<T>>(responseStructure,status);
 
 	}
+
+	public static <T>ResponseEntity<SimpleResponseStructure<T>>setSimpleResponseStructure(HttpStatus status,String message)
+	{
+		SimpleResponseStructure<T>responseStructure= new SimpleResponseStructure<T>();
+		responseStructure.setStatus(status.value());
+		responseStructure.setMessage(message);
+
+		return new  ResponseEntity<SimpleResponseStructure<T>>(responseStructure,status);
+	}
 }
